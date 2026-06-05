@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Churn Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 10px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .result-high {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .result-low {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+        
+        .loader {
+            display: none;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Customer Churn AI</h1>
+    <form id="churnForm">
+        <div class="form-group">
+            <label for="tenure">Tenure (Months)</label>
+            <input type="number" id="tenure" required min="1" max="100" placeholder="e.g. 12">
+        </div>
+        
+        <div class="form-group">
+            <label for="monthly_charges">Monthly Charges ($)</label>
+            <input type="number" id="monthly_charges" required step="0.01" min="0" placeholder="e.g. 50.00">
+        </div>
+        
+        <div class="form-group">
+            <label for="total_charges">Total Charges ($)</label>
+            <input type="number" id="total_charges" required step="0.01" min="0" placeholder="e.g. 600.00">
+        </div>
+
+        <div class="form-group">
+            <label for="contract_type">Contract Type</label>
+            <select id="contract_type" required>
+                <option value="0">Month-to-month</option>
+                <option value="1">One year</option>
+                <option value="2">Two year</option>
+            </select>
+        </div>
+
+        <button type="submit" id="submitBtn">Predict Churn Risk</button>
+        <div class="loader" id="loader"></div>
+    </form>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    document.getElementById('churnForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const loader = document.getElementById('loader');
+        const resultDiv = document.getElementById('result');
+        
+        submitBtn.style.display = 'none';
+        loader.style.display = 'block';
+        resultDiv.style.display = 'none';
+        
+        const data = {
+            tenure: parseInt(document.getElementById('tenure').value),
+            monthly_charges: parseFloat(document.getElementById('monthly_charges').value),
+            total_charges: parseFloat(document.getElementById('total_charges').value),
+            contract_type: parseInt(document.getElementById('contract_type').value)
+        };
+
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const res = await response.json();
+            
+            if (response.ok) {
+                const prob = (res.churn_probability * 100).toFixed(1);
+                resultDiv.className = res.churn_prediction ? 'result-high' : 'result-low';
+                resultDiv.innerHTML = `
+                    <h3 style="margin-top:0; margin-bottom:10px;">${res.churn_prediction ? 'High Risk of Churn' : 'Low Risk of Churn'}</h3>
+                    <p style="margin:0; font-size:14px; opacity:0.9;">Probability: <strong>${prob}%</strong></p>
+                `;
+            } else {
+                resultDiv.className = 'result-high';
+                resultDiv.innerHTML = `<p style="margin:0;">Error: ${res.detail}</p>`;
+            }
+        } catch (error) {
+            resultDiv.className = 'result-high';
+            resultDiv.innerHTML = `<p style="margin:0;">Failed to connect to API.</p>`;
+        } finally {
+            submitBtn.style.display = 'block';
+            loader.style.display = 'none';
+            resultDiv.style.display = 'block';
+        }
+    });
+</script>
+
+</body>
+</html>
